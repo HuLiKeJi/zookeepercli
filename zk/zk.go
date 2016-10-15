@@ -276,7 +276,7 @@ func Set(path string, data []byte) (*zk.Stat, error) {
 	return connection.Set(path, data, -1)
 }
 
-func IncreaseAndGet(path string, init int64) (int64, error) {
+func IncreaseAndGet(path string, init int64, force bool) (int64, error) {
 	connection, err := connect()
 	if err != nil {
 		return -1, err
@@ -289,8 +289,8 @@ func IncreaseAndGet(path string, init int64) (int64, error) {
 	}
 
 	if !exists {
-		//do not force create, not support acl
-		_, err := createInternal(connection, path, []byte(strconv.FormatInt(init, 10)), acl, false)
+		//not support acl
+		_, err := createInternal(connection, path, []byte(strconv.FormatInt(init, 10)), acl, force)
 		if err == nil {
 			return init, err
 		} else if err != zk.ErrNodeExists {

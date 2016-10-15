@@ -237,7 +237,7 @@ func main() {
 				}
 				init = tmp
 			}
-			if result, err := zk.IncreaseAndGet(path, init); err == nil {
+			if result, err := zk.IncreaseAndGet(path, init, *force); err == nil {
 				fmt.Println(result)
 			} else {
 				log.Fatale(err)

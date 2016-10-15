@@ -17,14 +17,15 @@
 package main
 
 import (
+	"./zk"
 	"flag"
 	"fmt"
 	"github.com/outbrain/golib/log"
 	"github.com/outbrain/zookeepercli/output"
-	"github.com/outbrain/zookeepercli/zk"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,7 +33,7 @@ import (
 // main is the application's entry point.
 func main() {
 	servers := flag.String("servers", "", "srv1[:port1][,srv2[:port2]...]")
-	command := flag.String("c", "", "command, required (exists|get|ls|lsr|create|creater|set|delete|rm|deleter|rmr|getacl|setacl)")
+	command := flag.String("c", "", "command, required (exists|get|ls|lsr|create|creater|set|delete|rm|deleter|rmr|getacl|setacl|inc)")
 	force := flag.Bool("force", false, "force operation")
 	format := flag.String("format", "txt", "output format (txt|json)")
 	omitNewline := flag.Bool("n", false, "omit trailing newline with get in txt format")
@@ -79,7 +80,7 @@ func main() {
 	}
 
 	if len(*command) == 0 {
-		log.Fatal("Expected command (-c) (exists|get|ls|lsr|create|creater|set|delete|rm|deleter|rmr|getacl|setacl)")
+		log.Fatal("Expected command (-c) (exists|get|ls|lsr|create|creater|set|delete|rm|deleter|rmr|getacl|setacl|inc)")
 	}
 
 	if len(flag.Args()) < 1 {
@@ -223,6 +224,22 @@ func main() {
 				log.Fatal("deleter (recursive) command requires --force for safety measure")
 			}
 			if err := zk.DeleteRecursive(path); err != nil {
+				log.Fatale(err)
+			}
+		}
+	case "inc":
+		{
+			init := int64(0)
+			if len(flag.Args()) > 1 {
+				tmp, err := strconv.ParseInt(flag.Arg(1), 10, 64)
+				if err != nil {
+					log.Fatale(err)
+				}
+				init = tmp
+			}
+			if result, err := zk.IncreaseAndGet(path, init); err == nil {
+				fmt.Println(result)
+			} else {
 				log.Fatale(err)
 			}
 		}

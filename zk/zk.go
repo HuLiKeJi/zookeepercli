@@ -276,6 +276,56 @@ func Set(path string, data []byte) (*zk.Stat, error) {
 	return connection.Set(path, data, -1)
 }
 
+func IncreaseAndGet(path string, init int64) (int64, error) {
+	connection, err := connect()
+	if err != nil {
+		return -1, err
+	}
+	defer connection.Close()
+
+	exists, _, err := connection.Exists(path)
+	if err != nil {
+		return -1, err
+	}
+
+	if !exists {
+		//do not force create, not support acl
+		_, err := createInternal(connection, path, []byte(strconv.FormatInt(init, 10)), acl, false)
+		if err == nil {
+			return init, err
+		} else if err != zk.ErrNodeExists {
+			return -1, nil
+		}
+	}
+
+	for {
+		get_data, get_stat, get_err := connection.Get(path)
+		if get_err != nil {
+			return -1, err
+		}
+
+		counter := init
+		//empty data
+		if len(get_data) != 0 {
+			tmp, parse_err := strconv.ParseInt(string(get_data), 10, 64)
+			if parse_err != nil {
+				return -1, err
+			}
+			counter = tmp + 1
+		}
+
+		_, set_err := connection.Set(path, []byte(strconv.FormatInt(counter, 10)), get_stat.Version)
+		if set_err == nil {
+			return counter, nil
+		}
+		if set_err != zk.ErrBadVersion {
+			return -1, err
+		}
+	}
+
+	return -1, nil
+}
+
 // updates the ACL on a given path
 func SetACL(path string, aclstr string, force bool) (string, error) {
 	connection, err := connect()

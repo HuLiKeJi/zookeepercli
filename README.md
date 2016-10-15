@@ -131,6 +131,9 @@ Otherwise the source code is freely available; you will need `git` installed as 
     # set an acl with world and digest authentication creating the node if it doesn't exist
     $ zookeepercli --servers srv-1,srv-2,srv-3 -force -c setacl /demo_acl_create "world:anyone:rw,digest:someuser:hashedpw:crdwa"
 
+    # atomic create/increase node value
+    $ zookeepercli --servers srv-1,srv-2,srv-3 -c inc /demo_inc
+
 The tool was built in order to allow with shell scripting seamless integration with ZooKeeper. 
 There is another, official command line tool for ZooKeeper that the author found inadequate 
 in terms of output format and output control, as well as large footprint. 
